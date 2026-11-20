@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>School operations</h1>
+<div class="dashboard-grid mt-4">
+<section class="panel">
+  <h2>Teacher attendance approvals</h2>
+  {% for entry in checkins %}
+  <div class="record">
+    <strong>{{ entry.teacher.get_full_name }} · {{ entry.classroom.name }}</strong>
+    <p class="mb-2">{{ entry.created_at|date:"M j, Y · H:i" }} · {{ entry.status }}</p>
+    {% if entry.simulated %}<div class="demo-snapshot">Simulated snapshot</div>{% else %}<img class="snapshot" src="{% url 'photo' entry.pk %}" alt="Live capture for {{ entry.teacher.get_full_name }}">{% endif %}
+    {% include 'review_buttons.html' with item=entry action_name='review-checkin' %}
+  </div>
+  {% empty %}<p>No pending check-ins.</p>{% endfor %}
+</section>
+<section class="panel">
+  <h2>Leave requests</h2>
+  {% for entry in leaves %}
+  <div class="record">{{ entry.teacher.get_full_name }} · {{ entry.date }}<br>{{ entry.reason }}
+    {% include 'review_buttons.html' with item=entry action_name='review-leave' %}
+  </div>
+  {% empty %}<p>No pending leave requests.</p>{% endfor %}
+</section>
+<section class="panel">
+  <h2>Tier 2 issue queue</h2>
+  {% for item in queue %}
+  <div class="record"><strong>{{ item.author.get_full_name }}</strong> · {{ item.created_at|date:"M j, H:i" }}<br>{{ item.text }}
+    {% if forloop.first %}
+    <form method="post" action="{% url 'action' 'resolve' %}" class="mt-2">{% csrf_token %}<input type="hidden" name="id" value="{{ item.pk }}"><button class="btn btn-primary btn-sm">Resolve oldest issue</button></form>
+    {% endif %}
+  </div>
+  {% empty %}<p>No open issues.</p>{% endfor %}
+</section>
+{% include 'scout.html' %}
+</div>
+<section class="panel mt-4">
+  <h2>Student and teacher records</h2>
+  <details class="record"><summary>Create account</summary>{% include 'record_form.html' %}</details>
+  <div class="dashboard-grid">
+    <div><h3>Students</h3>
+    {% for student in records %}<details class="record"><summary>{{ student.user.username }} · {{ student.classroom.name }}</summary>{% include 'record_form.html' with account=student.user assigned=student.classroom_id %}</details>{% endfor %}
+    </div>
+    <div><h3>Teachers</h3>
+    {% for teacher in teachers %}<details class="record"><summary>{{ teacher.username }}</summary>{% include 'record_form.html' with account=teacher %}</details>{% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

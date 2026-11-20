@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Finance vault</h1>
+<p class="text-secondary">Students with an outstanding balance appear under Unpaid. The roster shows one invoice at a time.</p>
+<div class="dashboard-grid mt-4">
+<section class="panel">
+  <h2>Find fee status</h2>
+  <form method="get" class="d-flex gap-2">
+    <input class="form-control" name="student" aria-label="Student username" placeholder="e.g. student1" value="{{ lookup_username }}" required>
+    <button class="btn btn-outline-primary">Look up</button>
+  </form>
+  {% if lookup_username %}<p class="mt-3 mb-0">{{ lookup_username }} · <strong>{{ lookup_result }}</strong></p>{% endif %}
+</section>
+<section class="panel">
+  <h2>Defaulter reminders</h2>
+  <p class="text-secondary">Send a portal reminder on the due date and escalate unpaid fees seven days later.</p>
+  <form method="post" action="{% url 'action' 'fee-cron' %}">{% csrf_token %}<button class="btn btn-primary">Run fee defaulter cron check</button></form>
+</section>
+<section class="panel">
+  <h2>Paid <span class="count">{{ paid|length }}</span></h2>
+  {% for student, fee in paid %}
+  <div class="record"><strong>{{ student.user.get_full_name }}</strong><br>PKR {{ fee.amount }} · paid {{ fee.paid_on|date:"M j, Y" }}<br>
+    <a href="{% url 'transcript' student.pk %}">Generate verified transcript</a>
+  </div>
+  {% empty %}<p>No paid invoices.</p>{% endfor %}
+</section>
+<section class="panel">
+  <h2>Unpaid <span class="count">{{ unpaid|length }}</span></h2>
+  {% for student, fee in unpaid %}
+  <div class="record"><strong>{{ student.user.get_full_name }}</strong><br>PKR {{ fee.amount }} · due {{ fee.due_date|date:"M j, Y" }}
+    <form method="post" action="{% url 'action' 'collect' %}" class="mt-2">{% csrf_token %}<input type="hidden" name="id" value="{{ fee.pk }}"><button class="btn btn-primary btn-sm">Record payment</button></form>
+    <a href="{% url 'transcript' student.pk %}">Generate verified transcript</a>
+  </div>
+  {% empty %}<p>No unpaid invoices.</p>{% endfor %}
+</section>
+</div>
+{% if no_invoice %}
+<section class="panel mt-4"><h2>Students without invoices</h2>
+{% for student, fee in no_invoice %}<p>{{ student.user.get_full_name }} · <a href="{% url 'transcript' student.pk %}">Generate verified transcript</a></p>{% endfor %}
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<h1>Executive dashboard</h1>
+<div class="dashboard-grid mt-4">
+<section class="panel">
+  <h2>School-wide pass / fail</h2>
+  <p>{{ passed }} passed · {{ failed }} failed · pass mark 50%</p>
+  <div class="chart"><canvas id="results" role="img" aria-label="Pass and fail counts"></canvas></div>
+</section>
+<section class="panel">
+  <h2>Monthly fees and payroll</h2>
+  <p class="text-secondary">Cash inflow and payroll outflow in PKR.</p>
+  <div class="chart"><canvas id="cashflow" role="img" aria-label="Six-month fee and payroll comparison"></canvas></div>
+</section>
+<section class="panel">
+  <h2>Teacher effectiveness audit</h2>
+  <div class="table-responsive"><table class="table">
+    <thead><tr><th>Teacher</th><th>Graded</th><th>Passed</th><th>Average</th></tr></thead>
+    <tbody>{% for teacher in audits %}<tr><th>{{ teacher.get_full_name }}</th><td>{{ teacher.graded }}</td><td>{{ teacher.passed }}</td><td>{% if teacher.graded %}{{ teacher.average|floatformat:1 }}%{% else %}—{% endif %}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+{% include "scout.html" %}
+</div>
+{{ chart|json_script:"chart-data" }}
+{% endblock %}
+{% block scripts %}
+{% if request.GET.cdn == '1' %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.js"></script>{% endif %}
+<script src="{% static 'core/charts.js' %}" data-chart-library="{% static 'core/vendor/chart.umd.js' %}" defer></script>
+{% endblock %}

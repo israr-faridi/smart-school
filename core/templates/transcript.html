@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="panel mx-auto transcript">
+  <p class="eyebrow">Academic records</p>
+  <h1>Official transcript</h1>
+  <p>{{ data.student }} · Student #{{ data.id }}<br>Issued {{ data.issued }}</p>
+  {% if verified %}<p class="alert alert-success">Signature verified by Smart School.</p>{% endif %}
+  <table class="table"><thead><tr><th>Subject</th><th>Score</th></tr></thead>
+  <tbody>{% for subject, score in data.grades %}<tr><td>{{ subject }}</td><td>{{ score }}%</td></tr>{% endfor %}</tbody></table>
+  {% if verification %}<a class="btn btn-outline-primary" href="{{ verification }}">Verify signature</a>{% endif %}
+  <button type="button" class="btn btn-primary" onclick="window.print()">Print or save as PDF</button>
+</section>
+{% endblock %}

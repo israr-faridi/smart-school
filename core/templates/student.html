@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>My school progress</h1>
+{% if record %}
+<p class="text-secondary">{{ record.classroom.name }}</p>
+<div class="dashboard-grid mt-4">
+<section class="panel">
+  <h2>Academic results</h2>
+  {% if high %}<p>Highest · <strong>{{ high.subject }} {{ high.score }}%</strong><br>Lowest · <strong>{{ low.subject }} {{ low.score }}%</strong></p>{% endif %}
+  <ul class="list-group list-group-flush">{% for grade in grades %}<li class="list-group-item px-0">{{ grade.subject }} <strong class="float-end">{{ grade.score }}%</strong></li>{% empty %}<li class="list-group-item">No results recorded.</li>{% endfor %}</ul>
+</section>
+<section class="panel">
+  <h2>Attendance & syllabus</h2>
+  <p><strong>{{ streak }}</strong> consecutive recorded school day{{ streak|pluralize }} present</p>
+  <label for="progress">Syllabus completion · {{ progress }}%</label>
+  <progress id="progress" class="w-100" max="100" value="{{ progress }}"></progress>
+  <ul class="list-group list-group-flush">{% for topic in topics %}<li class="list-group-item px-0">{{ topic.title }} · {{ topic.date|date:"M j" }} · {{ topic.status }}</li>{% endfor %}</ul>
+</section>
+<section class="panel">
+  <h2>My health flags</h2>
+  <dl class="mb-0"><dt>Blood group</dt><dd>{{ record.blood_group|default:"Unrecorded" }}</dd><dt>Allergies</dt><dd>{{ record.allergies|default:"None recorded" }}</dd></dl>
+</section>
+<section class="panel">
+  <h2>Fee reminders</h2>
+  {% for fee in unpaid %}<p>PKR {{ fee.amount }} · due {{ fee.due_date|date:"M j, Y" }}</p>{% empty %}<p>No outstanding fees.</p>{% endfor %}
+</section>
+</div>
+{% else %}<p>Your student record will appear when the school assigns it.</p>{% endif %}
+{% endblock %}

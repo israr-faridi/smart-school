@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<h1>Teaching dashboard</h1>
+<div class="dashboard-grid mt-4">
+<section class="panel">
+  <h2>Classroom check-in</h2>
+  <p class="text-secondary">Simulate a QR scan and GPS verification, then take a photo or use a demo snapshot.</p>
+  <form id="checkin" method="post" action="{% url 'action' 'check-in' %}">
+    {% csrf_token %}
+    <label for="checkin-class">Classroom</label>
+    <select id="checkin-class" class="form-select mb-3" name="classroom" required>
+      {% for room in classes %}<option value="{{ room.pk }}" data-qr="{{ room.qr_code }}">{{ room.name }}</option>{% empty %}<option value="">No assigned classroom</option>{% endfor %}
+    </select>
+    <input type="hidden" name="qr"><input type="hidden" name="gps">
+    <input type="hidden" name="capture"><input type="hidden" name="snapshot">
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <button class="btn btn-outline-primary" type="button" id="scan">Simulate QR & GPS</button>
+      <button class="btn btn-outline-primary" type="button" id="start-camera">Open live camera</button>
+      <button class="btn btn-outline-primary" type="button" id="take-photo" disabled>Capture photo</button>
+      <button class="btn btn-outline-secondary" type="button" id="demo-photo">Use demo snapshot</button>
+    </div>
+    <video hidden playsinline autoplay muted></video>
+    <img id="preview" hidden class="snapshot" alt="Check-in snapshot preview">
+    <canvas hidden></canvas>
+    <p class="small mt-2" id="capture-status" aria-live="polite"></p>
+    <button class="btn btn-primary" id="submit-checkin" disabled>Submit for approval</button>
+  </form>
+</section>
+<section class="panel">
+  <h2>Recent check-ins</h2>
+  <ul class="list-group list-group-flush">
+  {% for entry in checkins %}<li class="list-group-item px-0">{{ entry.classroom.name }} · {{ entry.created_at|date:"M j, H:i" }} <strong>{{ entry.status }}</strong></li>{% empty %}<li class="list-group-item">No check-ins yet.</li>{% endfor %}
+  </ul>
+</section>
+</div>
+{% for room in classes %}
+<section class="panel mt-4">
+  <h2>{{ room.name }}</h2>
+  <div class="dashboard-grid">
+    <div>
+      <h3>Syllabus manager</h3>
+      <ul class="list-group list-group-flush mb-3">
+      {% for item in room.topics.all %}
+      <li class="list-group-item px-0">
+        <strong>{{ item.title }}</strong><br>{{ item.date|date:"M j, Y" }} · {{ item.status }}
+        {% if item.status != 'Completed' %}
+        <form class="mt-2 d-flex gap-2" method="post" action="{% url 'action' 'topic' %}">
+          {% csrf_token %}<input type="hidden" name="id" value="{{ item.pk }}">
+          <button class="btn btn-sm btn-outline-primary" name="status" value="Completed">Complete</button>
+          {% if item.status == 'Planned' %}<button class="btn btn-sm btn-outline-warning" name="status" value="Missed">Mark missed</button>{% endif %}
+        </form>
+        {% endif %}
+      </li>{% empty %}<li class="list-group-item">No topics scheduled.</li>{% endfor %}
+      </ul>
+      <form method="post" action="{% url 'action' 'add-topic' %}" class="d-grid gap-2">
+        {% csrf_token %}<input type="hidden" name="classroom" value="{{ room.pk }}">
+        <label>Topic title<input class="form-control" name="title" maxlength="100" required></label>
+        <label>Scheduled date<input class="form-control" name="date" type="date" required></label>
+        <button class="btn btn-outline-primary">Add topic</button>
+      </form>
+    </div>
+    <div>
+      <h3>Student attendance & grades</h3>
+      {% for student in room.students.all %}
+      {% if student.user.is_active %}
+      <details class="record">
+        <summary>{{ student.user.get_full_name|default:student.user.username }}</summary>
+        <form class="d-flex flex-wrap gap-2 my-3" method="post" action="{% url 'action' 'attendance' %}">
+          {% csrf_token %}<input type="hidden" name="student" value="{{ student.pk }}">
+          <button class="btn btn-sm btn-outline-primary" name="present" value="yes">Present today</button>
+          <button class="btn btn-sm btn-outline-secondary" name="present" value="no">Absent today</button>
+        </form>
+        <ul class="small">{% for grade in student.grades.all %}<li>{{ grade.subject }} · {{ grade.score }}{% if grade.locked %} (locked){% endif %}</li>{% endfor %}</ul>
+        <form class="d-grid gap-2" method="post" action="{% url 'action' 'grade' %}">
+          {% csrf_token %}<input type="hidden" name="student" value="{{ student.pk }}">
+          <label>Subject<input class="form-control" name="subject" maxlength="60" required></label>
+          <label>Score out of 100<input class="form-control" name="score" type="number" min="0" max="100" required></label>
+          <label><input class="form-check-input" type="checkbox" name="lock" value="yes"> Finalize and lock grade</label>
+          <button class="btn btn-primary btn-sm">Save grade</button>
+        </form>
+      </details>
+      {% endif %}
+      {% empty %}<p>No enrolled students.</p>{% endfor %}
+    </div>
+  </div>
+</section>
+{% endfor %}
+<div class="dashboard-grid mt-4">
+  <section class="panel">
+    <h2>Report an issue</h2>
+    <form method="post" action="{% url 'action' 'issue' %}" class="d-grid gap-2">
+      {% csrf_token %}
+      <label>Escalation tier<select class="form-select" name="tier"><option value="1">1 · Silent portal alert</option><option value="2">2 · Admin task queue</option><option value="3">3 · Simulated WhatsApp escalation</option></select></label>
+      <label>Issue details<textarea class="form-control" name="message" maxlength="250" required></textarea></label>
+      <button class="btn btn-primary">Submit issue</button>
+    </form>
+  </section>
+  <section class="panel">
+    <h2>Request leave</h2>
+    <form method="post" action="{% url 'action' 'leave' %}" class="d-grid gap-2">
+      {% csrf_token %}
+      <label>Leave date<input class="form-control" name="date" type="date" required></label>
+      <label>Reason<input class="form-control" name="reason" maxlength="200" required></label>
+      <button class="btn btn-outline-primary">Submit leave request</button>
+    </form>
+    {% for leave in leaves %}<p class="mt-2 mb-0">{{ leave.date }} · {{ leave.status }}</p>{% endfor %}
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{% static 'core/camera.js' %}" defer></script>{% endblock %}

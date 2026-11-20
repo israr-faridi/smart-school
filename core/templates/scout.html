@@ -1,0 +1,13 @@
+<section class="panel">
+  <h2>Talent scout</h2>
+  <form method="get" class="d-flex gap-2 mb-3">
+    <select aria-label="Scouting category" class="form-select" name="scout">
+      <option value="debate" {% if category == 'debate' %}selected{% endif %}>Debate</option>
+      <option value="sports" {% if category == 'sports' %}selected{% endif %}>Sports</option>
+    </select>
+    <button class="btn btn-outline-primary">Rank</button>
+  </form>
+  <ol class="list-group list-group-numbered">
+    {% for student, score in leaders %}<li class="list-group-item">{{ student.user.get_full_name }} · {{ student.classroom.name }} <strong class="float-end">{{ score }}</strong></li>{% empty %}<li class="list-group-item">No students to rank.</li>{% endfor %}
+  </ol>
+</section>

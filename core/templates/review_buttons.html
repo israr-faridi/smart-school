@@ -1,0 +1,5 @@
+<form method="post" action="{% url 'action' action_name %}" class="d-flex gap-2 mt-2">
+  {% csrf_token %}<input type="hidden" name="id" value="{{ item.pk }}">
+  <button class="btn btn-success btn-sm" name="status" value="Approved">Approve</button>
+  <button class="btn btn-outline-danger btn-sm" name="status" value="Rejected">Reject</button>
+</form>

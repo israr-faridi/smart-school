@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Sign in · Smart School{% endblock %}
+{% block content %}
+<section class="panel login mx-auto">
+  <h1>Sign in</h1>
+  <p class="text-secondary">Use your school account to open your dashboard.</p>
+  <form method="post">
+    {% csrf_token %}
+    {% if form.errors %}<p role="alert" class="alert alert-warning">Check your username and password, then try again.</p>{% endif %}
+    <label for="id_username">Username</label><input class="form-control mb-3" id="id_username" name="username" autocomplete="username" required autofocus>
+    <label for="id_password">Password</label><input class="form-control mb-4" type="password" id="id_password" name="password" autocomplete="current-password" required>
+    <input type="hidden" name="next" value="{{ next }}"><button class="btn btn-primary w-100">Sign in</button>
+  </form>
+</section>
+{% endblock %}

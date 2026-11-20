@@ -1,0 +1,19 @@
+<form method="post" action="{% url 'action' 'record' %}" class="d-grid gap-2 mt-3">
+  {% csrf_token %}
+  {% if account %}
+  <input type="hidden" name="id" value="{{ account.pk }}"><input type="hidden" name="role" value="{{ account.role }}">
+  {% else %}
+  <label>Role<select class="form-select" name="role"><option>Student</option><option>Teacher</option></select></label>
+  <label>Username<input class="form-control" name="username" maxlength="150" required></label>
+  <label>Initial password<input class="form-control" type="password" name="password" maxlength="128" required></label>
+  {% endif %}
+  <label>First name<input class="form-control" name="first_name" value="{{ account.first_name }}" maxlength="150" required></label>
+  <label>Last name<input class="form-control" name="last_name" value="{{ account.last_name }}" maxlength="150"></label>
+  {% if not account or account.role == 'Student' %}
+  <label>Classroom for student<select class="form-select" name="classroom">
+    {% for room in classes %}<option value="{{ room.pk }}" {% if room.pk == assigned %}selected{% endif %}>{{ room.name }}</option>{% endfor %}
+  </select></label>
+  {% endif %}
+  {% if account %}<label><input class="form-check-input" type="checkbox" name="active" value="yes" {% if account.is_active %}checked{% endif %}> Active account</label>{% endif %}
+  <button class="btn btn-primary btn-sm">Save account</button>
+</form>
